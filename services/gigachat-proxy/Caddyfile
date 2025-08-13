@@ -1,0 +1,21 @@
+{
+    auto_https off
+}
+
+:8081 {
+    reverse_proxy https://ngw.devices.sberbank.ru:9443 {
+        header_up Host ngw.devices.sberbank.ru
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+}
+
+:8082 {
+    reverse_proxy https://gigachat.devices.sberbank.ru {
+        header_up Host gigachat.devices.sberbank.ru
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+}
