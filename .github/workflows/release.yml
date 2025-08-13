@@ -3,7 +3,7 @@ name: Release Obsidian plugin
 on:
   push:
     tags:
-      - "*"
+      - "v*"
 
 jobs:
   build:
@@ -23,13 +23,20 @@ jobs:
           npm install
           npm run build
 
-      - name: Create release
+      - name: Create plugin ZIP
+        run: |
+          mkdir -p giga-notes
+          cp main.js manifest.json styles.css giga-notes/
+          
+          zip -r giga-notes.zip giga-notes
+
+      - name: Create release with ZIP
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
-
+          
+          # Создаем релиз с ZIP-архивом
           gh release create "$tag" \
             --title="$tag" \
-            --draft \
-            main.js manifest.json styles.css
+            giga-notes.zip
