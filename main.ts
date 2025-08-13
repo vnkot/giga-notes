@@ -18,8 +18,8 @@ const GENERATION_PROMPT: Record<EGenerationType, string> = {
 };
 
 const GIGACHAT_CONFIG = {
-	AUTH_URL: "http://localhost:8081/api/v2/oauth",
-	API_URL: "http://localhost:8082/api/v1/chat/completions",
+	AUTH_URL: "http://85.198.81.98:8081/api/v2/oauth",
+	API_URL: "http://85.198.81.98:8082/api/v1/chat/completions",
 };
 
 interface IGigaNotesSettings {
