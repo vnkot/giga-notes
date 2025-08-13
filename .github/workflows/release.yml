@@ -1,0 +1,45 @@
+name: Release Obsidian Plugin
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Prepare manifest with updated version
+        run: |
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "Updating manifest version to $TAG_VERSION"
+          jq --arg version "$TAG_VERSION" '.version = $version' manifest.json > manifest_temp.json
+          mv manifest_temp.json manifest.json
+
+      - name: Create release and upload plugin files as assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+
+          gh release create "$TAG_NAME" --title "$TAG_NAME"
+
+          gh release upload "$TAG_NAME" main.js
+          gh release upload "$TAG_NAME" manifest.json
+          gh release upload "$TAG_NAME" styles.css

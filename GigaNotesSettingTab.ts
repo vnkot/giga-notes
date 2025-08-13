@@ -1,5 +1,5 @@
 import GigaNotesPlugin from "main";
-import { PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting } from "obsidian";
 
 export class GigaNotesSettingTab extends PluginSettingTab {
 	plugin: GigaNotesPlugin;
