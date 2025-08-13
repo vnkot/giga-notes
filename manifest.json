@@ -1,0 +1,10 @@
+{
+	"id": "giga-notes",
+	"name": "GigaNotes",
+	"version": "0.1.0",
+	"minAppVersion": "1.4.0",
+	"isDesktopOnly": false,
+	"description": "AI-ассистент для написания заметок в Obsidian",
+	"author": "Котельников Владислав",
+	"authorUrl": "https://github.com/vnkot"
+}

@@ -1,0 +1,10 @@
+services:
+  gigachat-proxy:
+    image: caddy:2.7.6-alpine
+    container_name: mindforge-proxy
+    ports:
+      - "8081:8081" # Порт для авторизации
+      - "8082:8082" # Порт для API
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    restart: unless-stopped
