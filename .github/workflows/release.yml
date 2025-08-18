@@ -31,9 +31,13 @@ jobs:
           cp main.js manifest.json styles.css giga-notes/
 
       - name: Update manifest version
+        id: set_version
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           VERSION="${TAG_NAME#v}"
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV  # Сохраняем в переменные окружения
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
           jq --arg v "$VERSION" '.version = $v' giga-notes/manifest.json > temp.json
           mv temp.json giga-notes/manifest.json
 
@@ -45,6 +49,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Используем сохраненную переменную окружения
           gh release create "$TAG_NAME" \
             --title "$TAG_NAME" \
             giga-notes.zip
