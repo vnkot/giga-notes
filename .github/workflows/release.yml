@@ -1,4 +1,4 @@
-name: Release Obsidian plugin
+name: Release Obsidian Plugin
 
 on:
   push:
@@ -8,35 +8,43 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v3
 
-      - name: Use Node.js
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: '18.x'
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Build plugin
-        run: |
-          npm install
-          npm run build
+        run: npm run build
 
-      - name: Create plugin ZIP
+      - name: Prepare plugin bundle
         run: |
           mkdir -p giga-notes
           cp main.js manifest.json styles.css giga-notes/
-          
+
+      - name: Update manifest version
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG_NAME#v}"
+          jq --arg v "$VERSION" '.version = $v' giga-notes/manifest.json > temp.json
+          mv temp.json giga-notes/manifest.json
+
+      - name: Create plugin ZIP
+        run: |
           zip -r giga-notes.zip giga-notes
 
-      - name: Create release with ZIP
+      - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
-          
-          # Создаем релиз с ZIP-архивом
-          gh release create "$tag" \
-            --title="$tag" \
+          gh release create "$TAG_NAME" \
+            --title "$TAG_NAME" \
             giga-notes.zip

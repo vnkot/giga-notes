@@ -1,6 +1,7 @@
 {
-	"version": "0.1.2",
+	"version": "0.0.0",
 	"id": "giga-notes",
+	"main": "main.js",
 	"name": "GigaNotes",
 	"description": "AI-ассистент для написания заметок в Obsidian",
 	"isDesktopOnly": false,
