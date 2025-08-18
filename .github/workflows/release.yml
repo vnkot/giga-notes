@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
+      
       - name: Install jq
         run: sudo apt-get install -y jq
 
@@ -29,27 +29,34 @@ jobs:
         run: |
           mkdir -p giga-notes
           cp main.js manifest.json styles.css giga-notes/
+          
+          echo "Plugin bundle contents:"
+          ls -la giga-notes
 
       - name: Update manifest version
-        id: set_version
         run: |
-          TAG_NAME="${GITHUB_REF#refs/tags/}"
-          VERSION="${TAG_NAME#v}"
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV  # Сохраняем в переменные окружения
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "Updating manifest version to $VERSION"
           
           jq --arg v "$VERSION" '.version = $v' giga-notes/manifest.json > temp.json
           mv temp.json giga-notes/manifest.json
+          
+          echo "Updated manifest:"
+          cat giga-notes/manifest.json
 
       - name: Create plugin ZIP
         run: |
           zip -r giga-notes.zip giga-notes
+          echo "ZIP file created:"
+          ls -la *.zip
 
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Используем сохраненную переменную окружения
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          echo "Creating release for tag: $TAG_NAME"
+          
           gh release create "$TAG_NAME" \
             --title "$TAG_NAME" \
             giga-notes.zip
