@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Install jq
-        run: sudo apt-get install -y jq
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -28,35 +25,15 @@ jobs:
       - name: Prepare plugin bundle
         run: |
           mkdir -p giga-notes
+          
           cp main.js manifest.json styles.css giga-notes/
           
-          echo "Plugin bundle contents:"
-          ls -la giga-notes
-
-      - name: Update manifest version
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "Updating manifest version to $VERSION"
-          
-          jq --arg v "$VERSION" '.version = $v' giga-notes/manifest.json > temp.json
-          mv temp.json giga-notes/manifest.json
-          
-          echo "Updated manifest:"
-          cat giga-notes/manifest.json
-
-      - name: Create plugin ZIP
-        run: |
           zip -r giga-notes.zip giga-notes
-          echo "ZIP file created:"
-          ls -la *.zip
 
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_NAME="${GITHUB_REF#refs/tags/}"
-          echo "Creating release for tag: $TAG_NAME"
-          
-          gh release create "$TAG_NAME" \
-            --title "$TAG_NAME" \
+          gh release create "$(basename $GITHUB_REF)" \
+            --title "$(basename $GITHUB_REF)" \
             giga-notes.zip
