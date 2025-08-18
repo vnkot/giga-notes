@@ -39,8 +39,12 @@ jobs:
           
           zip -r giga-notes.zip giga-notes
           
+          cp giga-notes/manifest.json .
+          
           echo "Contents of ZIP archive:"
           unzip -l giga-notes.zip
+          echo "Manifest content:"
+          cat manifest.json
 
       - name: Create release
         env:
@@ -50,4 +54,5 @@ jobs:
           
           gh release create "$TAG_NAME" \
             --title "$TAG_NAME" \
-            giga-notes.zip
+            giga-notes.zip \
+            manifest.json
