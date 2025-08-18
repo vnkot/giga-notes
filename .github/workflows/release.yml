@@ -25,34 +25,21 @@ jobs:
       - name: Build plugin
         run: npm run build
 
-      - name: Prepare plugin bundle
+      - name: Prepare manifest with updated version
         run: |
-          mkdir -p temp_build
-          cp main.js manifest.json styles.css temp_build/
-          
-          mv temp_build giga-notes
-          
           TAG_VERSION="${GITHUB_REF#refs/tags/v}"
           echo "Updating manifest version to $TAG_VERSION"
-          jq --arg version "$TAG_VERSION" '.version = $version' giga-notes/manifest.json > temp.json
-          mv temp.json giga-notes/manifest.json
-          
-          zip -r giga-notes.zip giga-notes
-          
-          cp giga-notes/manifest.json .
-          
-          echo "Contents of ZIP archive:"
-          unzip -l giga-notes.zip
-          echo "Manifest content:"
-          cat manifest.json
+          jq --arg version "$TAG_VERSION" '.version = $version' manifest.json > manifest_temp.json
+          mv manifest_temp.json manifest.json
 
-      - name: Create release
+      - name: Create release and upload plugin files as assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
-          
-          gh release create "$TAG_NAME" \
-            --title "$TAG_NAME" \
-            giga-notes.zip \
-            manifest.json
+
+          gh release create "$TAG_NAME" --title "$TAG_NAME"
+
+          gh release upload "$TAG_NAME" main.js
+          gh release upload "$TAG_NAME" manifest.json
+          gh release upload "$TAG_NAME" styles.css
