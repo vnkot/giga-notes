@@ -27,16 +27,27 @@ jobs:
 
       - name: Prepare plugin bundle
         run: |
-          mkdir -p giga-notes
+          mkdir -p temp_build
+          cp main.js manifest.json styles.css temp_build/
           
-          cp main.js manifest.json styles.css giga-notes/
+          mv temp_build giga-notes
+          
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "Updating manifest version to $TAG_VERSION"
+          jq --arg version "$TAG_VERSION" '.version = $version' giga-notes/manifest.json > temp.json
+          mv temp.json giga-notes/manifest.json
           
           zip -r giga-notes.zip giga-notes
+          
+          echo "Contents of ZIP archive:"
+          unzip -l giga-notes.zip
 
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "$(basename $GITHUB_REF)" \
-            --title "$(basename $GITHUB_REF)" \
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          
+          gh release create "$TAG_NAME" \
+            --title "$TAG_NAME" \
             giga-notes.zip
