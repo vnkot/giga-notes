@@ -64,43 +64,67 @@ export default class GigaNotesPlugin extends Plugin {
 		this.addCommand({
 			id: 'definition',
 			name: 'Сгенерировать определение',
-			editorCallback: async (editor: Editor) => {
-				const selection = editor.getSelection();
-
-				if (!selection) return;
-
-				try {
-					editor.replaceSelection(await this.generateContent(GENERATION_PROMPT[EGenerationType.DEFINITION], selection));
-				} catch (error) {
-					if (error instanceof Error) {
-						new Notice(`Ошибка генерации ответа: ${error.message}`)
-					} else {
-						new Notice(`Ошибка генерации`)
-					}
-				}
-			},
+			editorCallback: (editor) => this.generateDefinition(editor),
 		});
 
 		this.addCommand({
 			id: 'text-expand',
 			name: 'Дополнить текст',
-			editorCallback: async (editor: Editor) => {
+			editorCallback: (editor) => this.generateExpandedText(editor),
+		});
+
+		this.registerEvent(
+			this.app.workspace.on("editor-menu", (menu, editor, view) => {
 				const selection = editor.getSelection();
 
 				if (!selection) return;
 
-				try {
-					editor.replaceSelection(await this.generateContent(GENERATION_PROMPT[EGenerationType.TEXT_EXPAND], selection));
-				} catch (error) {
-					if (error instanceof Error) {
-						new Notice(`Ошибка генерации ответа: ${error.message}`)
-					} else {
-						new Notice(`Ошибка генерации`)
-					}
-				}
-			},
-		});
+				menu.addItem((item) =>
+					item.setTitle("Сгенерировать определение")
+						.setIcon("book")
+						.onClick(() => this.generateDefinition(editor))
+				);
+				menu.addItem((item) =>
+					item.setTitle("Дополнить текст")
+						.setIcon("pencil")
+						.onClick(() => this.generateExpandedText(editor))
+				);
+			})
+		);
 	}
+
+	private async generateDefinition(editor: Editor) {
+		const selection = editor.getSelection();
+
+		if (!selection) return;
+
+		try {
+			editor.replaceSelection(await this.generateContent(GENERATION_PROMPT[EGenerationType.DEFINITION], selection));
+		} catch (error) {
+			if (error instanceof Error) {
+				new Notice(`Ошибка генерации ответа: ${error.message}`)
+			} else {
+				new Notice(`Ошибка генерации`)
+			}
+		}
+	}
+
+	private async generateExpandedText(editor: Editor) {
+		const selection = editor.getSelection();
+
+		if (!selection) return;
+
+		try {
+			editor.replaceSelection(await this.generateContent(GENERATION_PROMPT[EGenerationType.TEXT_EXPAND], selection));
+		} catch (error) {
+			if (error instanceof Error) {
+				new Notice(`Ошибка генерации ответа: ${error.message}`)
+			} else {
+				new Notice(`Ошибка генерации`)
+			}
+		}
+	}
+
 
 	private async generateContent(prompt: string, text: string) {
 		if (!this.gigaChat) {
