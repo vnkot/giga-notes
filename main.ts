@@ -2,6 +2,12 @@ import { GigaChat } from 'entities/gigachat';
 import { GigaNotesSettingTab } from 'GigaNotesSettingTab';
 import { Editor, Notice, Plugin } from 'obsidian';
 
+enum EGigaNotesStatus {
+	READY_TO_WORK,
+	NOT_AUTHORIZED,
+	IN_PROGRESS
+}
+
 enum EGenerationType {
 	DEFINITION,
 	TEXT_EXPAND
@@ -16,6 +22,23 @@ const GENERATION_PROMPT: Record<EGenerationType, string> = {
 		`Дополни текст, сохраняя оригинальный стиль и контекст. Плавно продолжи мысль, 
     не изменяя существующий контент. Добавь 1-2 предложения, развивающие идею. Используй markdown разметку`
 };
+
+const GIGA_NOTES_STATUS_TEXT: Record<EGigaNotesStatus, string> = {
+	[EGigaNotesStatus.READY_TO_WORK]:
+		`GigaNotes готов к работе`,
+	[EGigaNotesStatus.NOT_AUTHORIZED]:
+		`GigaNotes не авторизован`,
+	[EGigaNotesStatus.IN_PROGRESS]:
+		`GigaNotes выполняет запрос`
+}
+
+const STATUS_ICONS: Record<EGigaNotesStatus, string> = {
+	[EGigaNotesStatus.READY_TO_WORK]: "✅",
+	[EGigaNotesStatus.NOT_AUTHORIZED]: "🔑",
+	[EGigaNotesStatus.IN_PROGRESS]: "⏳"
+};
+
+
 
 const GIGACHAT_CONFIG = {
 	AUTH_URL: "http://85.198.81.98:8081/api/v2/oauth",
@@ -35,6 +58,8 @@ const DEFAULT_SETTINGS: IGigaNotesSettings = {
 
 export default class GigaNotesPlugin extends Plugin {
 	private gigaChat: GigaChat;
+	private statusBarItem: HTMLElement;
+
 	settings: IGigaNotesSettings;
 
 	async onload() {
@@ -49,6 +74,7 @@ export default class GigaNotesPlugin extends Plugin {
 	private initGigaChat() {
 		if (!this.settings.authKey) {
 			new Notice('Не указан ключ доступа');
+			this.changeStatusBarStatus(EGigaNotesStatus.NOT_AUTHORIZED);
 			return
 		}
 
@@ -61,16 +87,26 @@ export default class GigaNotesPlugin extends Plugin {
 			authUrl: GIGACHAT_CONFIG.AUTH_URL,
 		})
 
+		this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK);
+
 		this.addCommand({
 			id: 'definition',
 			name: 'Сгенерировать определение',
-			editorCallback: (editor) => this.generateDefinition(editor),
+			editorCallback: async (editor) => {
+				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
+				await this.generateDefinition(editor)
+				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+			},
 		});
 
 		this.addCommand({
 			id: 'text-expand',
 			name: 'Дополнить текст',
-			editorCallback: (editor) => this.generateExpandedText(editor),
+			editorCallback: async (editor) => {
+				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
+				await this.generateExpandedText(editor)
+				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+			},
 		});
 
 		this.registerEvent(
@@ -82,15 +118,33 @@ export default class GigaNotesPlugin extends Plugin {
 				menu.addItem((item) =>
 					item.setTitle("Сгенерировать определение")
 						.setIcon("book")
-						.onClick(() => this.generateDefinition(editor))
+						.onClick(async () => {
+							this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
+							await this.generateDefinition(editor)
+							this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+						})
 				);
 				menu.addItem((item) =>
 					item.setTitle("Дополнить текст")
 						.setIcon("pencil")
-						.onClick(() => this.generateExpandedText(editor))
+						.onClick(async () => {
+							this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
+							await this.generateExpandedText(editor)
+							this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+						})
 				);
 			})
 		);
+
+	}
+
+	private changeStatusBarStatus(status: EGigaNotesStatus) {
+		if (!this.statusBarItem) {
+			this.statusBarItem = this.addStatusBarItem();
+		}
+
+		const statusText = `${STATUS_ICONS[status]} ${GIGA_NOTES_STATUS_TEXT[status]}`;
+		this.statusBarItem.setText(statusText);
 	}
 
 	private async generateDefinition(editor: Editor) {
