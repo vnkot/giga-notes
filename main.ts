@@ -10,7 +10,8 @@ enum EGigaNotesStatus {
 
 enum EGenerationType {
 	DEFINITION,
-	TEXT_EXPAND
+	TEXT_EXPAND,
+	CUSTOM_REQUEST,
 }
 
 const GENERATION_PROMPT: Record<EGenerationType, string> = {
@@ -20,7 +21,8 @@ const GENERATION_PROMPT: Record<EGenerationType, string> = {
 
 	[EGenerationType.TEXT_EXPAND]:
 		`Дополни текст, сохраняя оригинальный стиль и контекст. Плавно продолжи мысль, 
-    не изменяя существующий контент. Добавь 1-2 предложения, развивающие идею. Используй markdown разметку`
+    не изменяя существующий контент. Добавь 1-2 предложения, развивающие идею. Используй markdown разметку`,
+	[EGenerationType.CUSTOM_REQUEST]: "Коротко ответь на следующее сообщение. Ты помощник для написания заметок в obsidian",
 };
 
 const GIGA_NOTES_STATUS_TEXT: Record<EGigaNotesStatus, string> = {
@@ -37,8 +39,6 @@ const STATUS_ICONS: Record<EGigaNotesStatus, string> = {
 	[EGigaNotesStatus.NOT_AUTHORIZED]: "🔑",
 	[EGigaNotesStatus.IN_PROGRESS]: "⏳"
 };
-
-
 
 const GIGACHAT_CONFIG = {
 	AUTH_URL: "http://85.198.81.98:8081/api/v2/oauth",
@@ -109,6 +109,16 @@ export default class GigaNotesPlugin extends Plugin {
 			},
 		});
 
+		this.addCommand({
+			id: 'custom-request',
+			name: 'Получить ответ',
+			editorCallback: async (editor) => {
+				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
+				await this.generateAnswer(editor)
+				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+			},
+		});
+
 		this.registerEvent(
 			this.app.workspace.on("editor-menu", (menu, editor, view) => {
 				const selection = editor.getSelection();
@@ -124,12 +134,23 @@ export default class GigaNotesPlugin extends Plugin {
 							this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
 						})
 				);
+
 				menu.addItem((item) =>
 					item.setTitle("Дополнить текст")
 						.setIcon("pencil")
 						.onClick(async () => {
 							this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
 							await this.generateExpandedText(editor)
+							this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+						})
+				);
+
+				menu.addItem((item) =>
+					item.setTitle("Получить ответ")
+						.setIcon("pencil")
+						.onClick(async () => {
+							this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
+							await this.generateAnswer(editor)
 							this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
 						})
 				);
@@ -179,6 +200,21 @@ export default class GigaNotesPlugin extends Plugin {
 		}
 	}
 
+	private async generateAnswer(editor: Editor) {
+		const selection = editor.getSelection();
+
+		if (!selection) return;
+
+		try {
+			editor.replaceSelection(await this.generateContent(GENERATION_PROMPT[EGenerationType.CUSTOM_REQUEST], selection));
+		} catch (error) {
+			if (error instanceof Error) {
+				new Notice(`Ошибка генерации ответа: ${error.message}`)
+			} else {
+				new Notice(`Ошибка генерации`)
+			}
+		}
+	}
 
 	private async generateContent(prompt: string, text: string) {
 		if (!this.gigaChat) {
