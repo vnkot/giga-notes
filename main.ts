@@ -1,60 +1,9 @@
-import { GigaChat } from 'entities/gigachat';
+import { GigaChat } from 'api/gigachat';
+import { DEFAULT_SETTINGS, PROXY_CONFIG } from 'config';
+import { GENERATION_PROMPT, GIGA_NOTES_STATUS_TEXT, GIGA_NOTES_STAUS_ICON } from 'const';
 import { GigaNotesSettingTab } from 'GigaNotesSettingTab';
 import { Editor, Notice, Plugin } from 'obsidian';
-
-enum EGigaNotesStatus {
-	READY_TO_WORK,
-	NOT_AUTHORIZED,
-	IN_PROGRESS
-}
-
-enum EGenerationType {
-	DEFINITION,
-	TEXT_EXPAND,
-	CUSTOM_REQUEST,
-}
-
-const GENERATION_PROMPT: Record<EGenerationType, string> = {
-	[EGenerationType.DEFINITION]:
-		`Сгенерируй ёмкое, но компактное определение. Формат: "Термин - это [сущность], которая...". 
-    Укажи 2-3 ключевые характеристики. Будь лаконичен (1-2 предложения). Используй markdown разметку`,
-
-	[EGenerationType.TEXT_EXPAND]:
-		`Дополни текст, сохраняя оригинальный стиль и контекст. Плавно продолжи мысль, 
-    не изменяя существующий контент. Добавь 1-2 предложения, развивающие идею. Используй markdown разметку`,
-	[EGenerationType.CUSTOM_REQUEST]: "Коротко ответь на следующее сообщение. Ты помощник для написания заметок в obsidian",
-};
-
-const GIGA_NOTES_STATUS_TEXT: Record<EGigaNotesStatus, string> = {
-	[EGigaNotesStatus.READY_TO_WORK]:
-		`GigaNotes готов к работе`,
-	[EGigaNotesStatus.NOT_AUTHORIZED]:
-		`GigaNotes не авторизован`,
-	[EGigaNotesStatus.IN_PROGRESS]:
-		`GigaNotes выполняет запрос`
-}
-
-const STATUS_ICONS: Record<EGigaNotesStatus, string> = {
-	[EGigaNotesStatus.READY_TO_WORK]: "✅",
-	[EGigaNotesStatus.NOT_AUTHORIZED]: "🔑",
-	[EGigaNotesStatus.IN_PROGRESS]: "⏳"
-};
-
-const GIGACHAT_CONFIG = {
-	AUTH_URL: "http://85.198.81.98:8081/api/v2/oauth",
-	API_URL: "http://85.198.81.98:8082/api/v1/chat/completions",
-};
-
-interface IGigaNotesSettings {
-	model: string;
-	scope: string;
-	authKey?: string,
-}
-
-const DEFAULT_SETTINGS: IGigaNotesSettings = {
-	model: 'GigaChat',
-	scope: 'GIGACHAT_API_PERS'
-}
+import { EGenerationType, EGigaNotesStatus, IGigaNotesSettings } from 'types';
 
 export default class GigaNotesPlugin extends Plugin {
 	private gigaChat: GigaChat;
@@ -83,8 +32,8 @@ export default class GigaNotesPlugin extends Plugin {
 			scope: this.settings.scope,
 			authKey: this.settings.authKey,
 
-			apiUrl: GIGACHAT_CONFIG.API_URL,
-			authUrl: GIGACHAT_CONFIG.AUTH_URL,
+			apiUrl: PROXY_CONFIG.API_URL,
+			authUrl: PROXY_CONFIG.AUTH_URL,
 		})
 
 		this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK);
@@ -164,7 +113,7 @@ export default class GigaNotesPlugin extends Plugin {
 			this.statusBarItem = this.addStatusBarItem();
 		}
 
-		const statusText = `${STATUS_ICONS[status]} ${GIGA_NOTES_STATUS_TEXT[status]}`;
+		const statusText = `${GIGA_NOTES_STAUS_ICON[status]} ${GIGA_NOTES_STATUS_TEXT[status]}`;
 		this.statusBarItem.setText(statusText);
 	}
 
