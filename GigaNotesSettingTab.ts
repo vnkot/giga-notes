@@ -47,5 +47,38 @@ export class GigaNotesSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName('Промпт для генерации определения')
+			.addTextArea((text) =>
+				text
+					.setValue(this.plugin.settings.definitionPrompt)
+					.onChange(async (value) => {
+						this.plugin.settings.definitionPrompt = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName('Промпт для генерации продления текста')
+			.addTextArea((text) =>
+				text
+					.setValue(this.plugin.settings.textExpandPrompt)
+					.onChange(async (value) => {
+						this.plugin.settings.textExpandPrompt = value;
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName('Промпт для получения ответа на кастомный запрос')
+			.addTextArea((text) =>
+				text
+					.setValue(this.plugin.settings.customRequestPrompt)
+					.onChange(async (value) => {
+						this.plugin.settings.customRequestPrompt = value;
+						await this.plugin.saveSettings();
+					})
+			);
 	}
 }

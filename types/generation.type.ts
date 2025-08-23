@@ -7,5 +7,8 @@ export enum EGenerationType {
 export interface IGigaNotesSettings {
 	model: string;
 	scope: string;
-	authKey?: string,
+	authKey?: string;
+	textExpandPrompt: string;
+	definitionPrompt: string;
+	customRequestPrompt: string;
 }

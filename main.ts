@@ -1,6 +1,6 @@
 import { GigaChat } from 'api/gigachat';
 import { DEFAULT_SETTINGS, PROXY_CONFIG } from 'config';
-import { GENERATION_PROMPT, GIGA_NOTES_STATUS_TEXT, GIGA_NOTES_STAUS_ICON } from 'const';
+import { GIGA_NOTES_STATUS_TEXT, GIGA_NOTES_STAUS_ICON } from 'const';
 import { GigaNotesSettingTab } from 'GigaNotesSettingTab';
 import { Editor, Notice, Plugin } from 'obsidian';
 import { EGenerationType, EGigaNotesStatus, IGigaNotesSettings } from 'types';
@@ -123,7 +123,7 @@ export default class GigaNotesPlugin extends Plugin {
 		if (!selection) return;
 
 		try {
-			editor.replaceSelection(await this.generateContent(GENERATION_PROMPT[EGenerationType.DEFINITION], selection));
+			editor.replaceSelection(await this.generateContent(this.settings.definitionPrompt, selection));
 		} catch (error) {
 			if (error instanceof Error) {
 				new Notice(`Ошибка генерации ответа: ${error.message}`)
@@ -139,7 +139,7 @@ export default class GigaNotesPlugin extends Plugin {
 		if (!selection) return;
 
 		try {
-			editor.replaceSelection(await this.generateContent(GENERATION_PROMPT[EGenerationType.TEXT_EXPAND], selection));
+			editor.replaceSelection(await this.generateContent(this.settings.textExpandPrompt, selection));
 		} catch (error) {
 			if (error instanceof Error) {
 				new Notice(`Ошибка генерации ответа: ${error.message}`)
@@ -155,7 +155,7 @@ export default class GigaNotesPlugin extends Plugin {
 		if (!selection) return;
 
 		try {
-			editor.replaceSelection(await this.generateContent(GENERATION_PROMPT[EGenerationType.CUSTOM_REQUEST], selection));
+			editor.replaceSelection(await this.generateContent(this.settings.customRequestPrompt, selection));
 		} catch (error) {
 			if (error instanceof Error) {
 				new Notice(`Ошибка генерации ответа: ${error.message}`)
