@@ -1,9 +1,9 @@
-import { GigaChat } from 'api/gigachat';
-import { DEFAULT_SETTINGS, PROXY_CONFIG } from 'config';
-import { GIGA_NOTES_STATUS_TEXT, GIGA_NOTES_STAUS_ICON } from 'const';
-import { GigaNotesSettingTab } from 'GigaNotesSettingTab';
-import { Editor, Notice, Plugin } from 'obsidian';
-import { EGenerationType, EGigaNotesStatus, IGigaNotesSettings } from 'types';
+import { GigaChat } from "api/gigachat";
+import { DEFAULT_SETTINGS, PROXY_CONFIG } from "config";
+import { GIGA_NOTES_STATUS_TEXT, GIGA_NOTES_STAUS_ICON } from "const";
+import { GigaNotesSettingTab } from "GigaNotesSettingTab";
+import { Editor, Notice, Plugin } from "obsidian";
+import { EGenerationType, EGigaNotesStatus, IGigaNotesSettings } from "types";
 
 export default class GigaNotesPlugin extends Plugin {
 	private gigaChat: GigaChat;
@@ -12,19 +12,19 @@ export default class GigaNotesPlugin extends Plugin {
 	settings: IGigaNotesSettings;
 
 	async onload() {
-		console.log('loading GigaNotes');
+		console.log("loading GigaNotes");
 
 		await this.loadSettings();
 
 		this.addSettingTab(new GigaNotesSettingTab(this.app, this));
-		this.initGigaChat()
+		this.initGigaChat();
 	}
 
 	private initGigaChat() {
 		if (!this.settings.authKey) {
-			new Notice('Не указан ключ доступа');
+			new Notice("Не указан ключ доступа");
 			this.changeStatusBarStatus(EGigaNotesStatus.NOT_AUTHORIZED);
-			return
+			return;
 		}
 
 		this.gigaChat = new GigaChat({
@@ -34,37 +34,37 @@ export default class GigaNotesPlugin extends Plugin {
 
 			apiUrl: PROXY_CONFIG.API_URL,
 			authUrl: PROXY_CONFIG.AUTH_URL,
-		})
+		});
 
 		this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK);
 
 		this.addCommand({
-			id: 'definition',
-			name: 'Сгенерировать определение',
+			id: "definition",
+			name: "Сгенерировать определение",
 			editorCallback: async (editor) => {
-				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
-				await this.generateDefinition(editor)
-				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS);
+				await this.generateDefinition(editor);
+				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK);
 			},
 		});
 
 		this.addCommand({
-			id: 'text-expand',
-			name: 'Дополнить текст',
+			id: "text-expand",
+			name: "Дополнить текст",
 			editorCallback: async (editor) => {
-				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
-				await this.generateExpandedText(editor)
-				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS);
+				await this.generateExpandedText(editor);
+				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK);
 			},
 		});
 
 		this.addCommand({
-			id: 'custom-request',
-			name: 'Получить ответ',
+			id: "custom-request",
+			name: "Получить ответ",
 			editorCallback: async (editor) => {
-				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
-				await this.generateAnswer(editor)
-				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+				this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS);
+				await this.generateAnswer(editor);
+				this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK);
 			},
 		});
 
@@ -75,42 +75,93 @@ export default class GigaNotesPlugin extends Plugin {
 				if (!selection) return;
 
 				menu.addItem((item) =>
-					item.setTitle("Сгенерировать определение")
+					item
+						.setTitle("Сгенерировать определение")
 						.setIcon("book")
 						.onClick(async () => {
-							this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
-							await this.generateDefinition(editor)
-							this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+							this.changeStatusBarStatus(
+								EGigaNotesStatus.IN_PROGRESS
+							);
+							await this.generateDefinition(editor);
+							this.changeStatusBarStatus(
+								EGigaNotesStatus.READY_TO_WORK
+							);
 						})
 				);
 
 				menu.addItem((item) =>
-					item.setTitle("Дополнить текст")
+					item
+						.setTitle("Дополнить текст")
 						.setIcon("pencil")
 						.onClick(async () => {
-							this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
-							await this.generateExpandedText(editor)
-							this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+							this.changeStatusBarStatus(
+								EGigaNotesStatus.IN_PROGRESS
+							);
+							await this.generateExpandedText(editor);
+							this.changeStatusBarStatus(
+								EGigaNotesStatus.READY_TO_WORK
+							);
 						})
 				);
 
 				menu.addItem((item) =>
-					item.setTitle("Получить ответ")
+					item
+						.setTitle("Получить ответ")
 						.setIcon("pencil")
 						.onClick(async () => {
-							this.changeStatusBarStatus(EGigaNotesStatus.IN_PROGRESS)
-							await this.generateAnswer(editor)
-							this.changeStatusBarStatus(EGigaNotesStatus.READY_TO_WORK)
+							this.changeStatusBarStatus(
+								EGigaNotesStatus.IN_PROGRESS
+							);
+							await this.generateAnswer(editor);
+							this.changeStatusBarStatus(
+								EGigaNotesStatus.READY_TO_WORK
+							);
 						})
 				);
 			})
 		);
+	}
 
+	private addStyles() {
+		const style = document.createElement("style");
+		style.textContent = `
+            .giga-notes-status-bar-item {
+                padding: 2px 8px;
+                border-radius: 4px;
+                transition: background-color 0.2s ease;
+            }
+            
+            .giga-notes-status-bar-item:hover {
+                background-color: var(--interactive-accent);
+                color: var(--text-on-accent);
+                cursor: pointer;
+            }
+        `;
+
+		document.head.appendChild(style);
+
+		this.register(() => style.remove());
 	}
 
 	private changeStatusBarStatus(status: EGigaNotesStatus) {
 		if (!this.statusBarItem) {
 			this.statusBarItem = this.addStatusBarItem();
+			this.statusBarItem.addClass("giga-notes-status-bar-item");
+
+			this.addStyles();
+
+			this.statusBarItem.addEventListener("click", () => {
+				const setting = (this.app as any).setting;
+
+				if (!setting) return;
+
+				setting.open();
+				setTimeout(() => {
+					if (setting.openTabById) {
+						setting.openTabById("giga-notes");
+					}
+				}, 100);
+			});
 		}
 
 		const statusText = `${GIGA_NOTES_STAUS_ICON[status]} ${GIGA_NOTES_STATUS_TEXT[status]}`;
@@ -123,12 +174,17 @@ export default class GigaNotesPlugin extends Plugin {
 		if (!selection) return;
 
 		try {
-			editor.replaceSelection(await this.generateContent(this.settings.definitionPrompt, selection));
+			editor.replaceSelection(
+				await this.generateContent(
+					this.settings.definitionPrompt,
+					selection
+				)
+			);
 		} catch (error) {
 			if (error instanceof Error) {
-				new Notice(`Ошибка генерации ответа: ${error.message}`)
+				new Notice(`Ошибка генерации ответа: ${error.message}`);
 			} else {
-				new Notice(`Ошибка генерации`)
+				new Notice(`Ошибка генерации`);
 			}
 		}
 	}
@@ -139,12 +195,17 @@ export default class GigaNotesPlugin extends Plugin {
 		if (!selection) return;
 
 		try {
-			editor.replaceSelection(await this.generateContent(this.settings.textExpandPrompt, selection));
+			editor.replaceSelection(
+				await this.generateContent(
+					this.settings.textExpandPrompt,
+					selection
+				)
+			);
 		} catch (error) {
 			if (error instanceof Error) {
-				new Notice(`Ошибка генерации ответа: ${error.message}`)
+				new Notice(`Ошибка генерации ответа: ${error.message}`);
 			} else {
-				new Notice(`Ошибка генерации`)
+				new Notice(`Ошибка генерации`);
 			}
 		}
 	}
@@ -155,26 +216,40 @@ export default class GigaNotesPlugin extends Plugin {
 		if (!selection) return;
 
 		try {
-			editor.replaceSelection(await this.generateContent(this.settings.customRequestPrompt, selection));
+			editor.replaceSelection(
+				await this.generateContent(
+					this.settings.customRequestPrompt,
+					selection
+				)
+			);
 		} catch (error) {
 			if (error instanceof Error) {
-				new Notice(`Ошибка генерации ответа: ${error.message}`)
+				new Notice(`Ошибка генерации ответа: ${error.message}`);
 			} else {
-				new Notice(`Ошибка генерации`)
+				new Notice(`Ошибка генерации`);
 			}
 		}
 	}
 
 	private async generateContent(prompt: string, text: string) {
 		if (!this.gigaChat) {
-			throw Error('Не инициализирован GigaChat. Попробуйте позже или перезагрузите Obsidian');
+			throw Error(
+				"Не инициализирован GigaChat. Попробуйте позже или перезагрузите Obsidian"
+			);
 		}
 
-		return this.gigaChat.getAnswer([{ role: "system", content: prompt }, { role: "user", content: text }])
+		return this.gigaChat.getAnswer([
+			{ role: "system", content: prompt },
+			{ role: "user", content: text },
+		]);
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData()
+		);
 	}
 
 	async saveSettings() {
